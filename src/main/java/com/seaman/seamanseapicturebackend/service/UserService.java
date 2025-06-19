@@ -1,8 +1,12 @@
 package com.seaman.seamanseapicturebackend.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.seaman.seamanseapicturebackend.model.dto.UserLoginRequest;
 import com.seaman.seamanseapicturebackend.model.dto.UserRegisterRequest;
 import com.seaman.seamanseapicturebackend.model.entity.User;
+import com.seaman.seamanseapicturebackend.model.vo.LoginUserVO;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author SeaManzhw
@@ -27,4 +31,20 @@ public interface UserService extends IService<User> {
      */
     String getEncryptPassword(String userPassword);
 
+    /**
+     * 用户登录
+     *
+     * @param userLoginRequest 用户登录DTO
+     * @param request          请求头
+     * @return 用户视图（脱敏）
+     */
+    LoginUserVO userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request);
+
+    /**
+     * 获得脱敏后的用户登录信息
+     *
+     * @param user 未脱敏的用户
+     * @return 脱敏后的用户信息
+     */
+    LoginUserVO getLoginUserVO(User user);
 }
