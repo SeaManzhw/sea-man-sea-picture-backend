@@ -1,0 +1,37 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+spring:
+  application:
+    name: sea-man-sea-picture
+    # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/sea_man_sea_picture?serverTimezone=Asia/Shanghai
+    username: root
+    password: Zhaohaiwei.1
+
+# mybatis-plus配置
+mybatis-plus:
+  configuration:
+    # 将数据库中下换线格式转为驼峰
+    map-underscore-to-camel-case: true
+    # 仅在开发阶段使用日志输出
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: idDelete # 逻辑删除字段
+      logic-delete-value: 1 # 已逻辑删除
+      logic-not-delete-value: 0 # 未逻辑删除
+knife4j:
+  enable: true
+  openapi:
+    title: 海人海图接口文档
+    version: 1.0
+    group:
+      default:
+        group-name: 默认分组
+        api-rule: package
+        api-rule-resources:
+          - com.seaman.seamanseapicturebackend.controller
