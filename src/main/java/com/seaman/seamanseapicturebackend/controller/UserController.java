@@ -1,0 +1,38 @@
+package com.seaman.seamanseapicturebackend.controller;
+
+import com.seaman.seamanseapicturebackend.common.BaseResponse;
+import com.seaman.seamanseapicturebackend.common.ResultUtils;
+import com.seaman.seamanseapicturebackend.exception.ErrorCode;
+import com.seaman.seamanseapicturebackend.exception.ThrowUtils;
+import com.seaman.seamanseapicturebackend.model.dto.UserRegisterRequest;
+import com.seaman.seamanseapicturebackend.service.UserService;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
+
+/**
+ * 用户控制类
+ */
+@RestController
+@RequestMapping("/user")
+public class UserController {
+
+    @Resource
+    UserService userService;
+
+    /**
+     * 用户注册接口
+     *
+     * @param userRegisterRequest 用户注册请求
+     * @return 返回用户id
+     */
+    @PostMapping("/register")
+    public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+        ThrowUtils.throwIf(userRegisterRequest == null, ErrorCode.PARAMS_ERROR, "注册请求为空");
+        return ResultUtils.success(userService.userRegister(userRegisterRequest));
+    }
+
+}
