@@ -118,8 +118,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         BeanUtil.copyProperties(user, loginUserVO);
         return loginUserVO;
     }
+
+    /**
+     * 获取登录用户
+     *
+     * @param request 请求头
+     * @return 登录用户
+     */
+    @Override
+    public User getLoginUser(HttpServletRequest request) {
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        User currentUser = (User) userObj;
+        ThrowUtils.throwIf(currentUser == null || currentUser.getId() == null, ErrorCode.NOT_LOGIN_ERROR);
+        //再次查询数据库，防止缓存与数据库不一致
+        Long id = currentUser.getId();
+        currentUser = this.getById(id);
+        ThrowUtils.throwIf(currentUser == null, ErrorCode.NOT_LOGIN_ERROR);
+        return currentUser;
+    }
 }
-
-
-
-

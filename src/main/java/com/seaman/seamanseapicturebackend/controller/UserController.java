@@ -6,12 +6,10 @@ import com.seaman.seamanseapicturebackend.exception.ErrorCode;
 import com.seaman.seamanseapicturebackend.exception.ThrowUtils;
 import com.seaman.seamanseapicturebackend.model.dto.UserLoginRequest;
 import com.seaman.seamanseapicturebackend.model.dto.UserRegisterRequest;
+import com.seaman.seamanseapicturebackend.model.entity.User;
 import com.seaman.seamanseapicturebackend.model.vo.LoginUserVO;
 import com.seaman.seamanseapicturebackend.service.UserService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -49,6 +47,18 @@ public class UserController {
     public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(userLoginRequest == null, ErrorCode.PARAMS_ERROR, "登录请求为空");
         return ResultUtils.success(userService.userLogin(userLoginRequest, request));
+    }
+
+    /**
+     * 获取当前登录用户（脱敏）
+     *
+     * @param request 请求头
+     * @return 脱敏后的登录用户
+     */
+    @GetMapping("/get/login")
+    public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        return ResultUtils.success(userService.getLoginUserVO(loginUser));
     }
 
 }
