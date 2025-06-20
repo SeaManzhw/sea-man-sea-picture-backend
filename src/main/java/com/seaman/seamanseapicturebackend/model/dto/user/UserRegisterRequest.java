@@ -1,14 +1,14 @@
-package com.seaman.seamanseapicturebackend.model.dto;
+package com.seaman.seamanseapicturebackend.model.dto.user;
 
 import lombok.Data;
 
 import java.io.Serializable;
 
 /**
- * 用户登录请求类
+ * 用户注册请求类
  */
 @Data
-public class UserLoginRequest implements Serializable {
+public class UserRegisterRequest implements Serializable {
 
     private static final long serialVersionUID = -7056962548480481227L;
 
@@ -20,4 +20,10 @@ public class UserLoginRequest implements Serializable {
      * 密码
      */
     private String userPassword;
+    /**
+     * 确认密码
+     */
+    private String checkPassword;
+
+
 }

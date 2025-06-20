@@ -1,12 +1,18 @@
 package com.seaman.seamanseapicturebackend.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.seaman.seamanseapicturebackend.model.dto.UserLoginRequest;
-import com.seaman.seamanseapicturebackend.model.dto.UserRegisterRequest;
+import com.seaman.seamanseapicturebackend.model.dto.user.UserAddRequest;
+import com.seaman.seamanseapicturebackend.model.dto.user.UserLoginRequest;
+import com.seaman.seamanseapicturebackend.model.dto.user.UserQueryRequest;
+import com.seaman.seamanseapicturebackend.model.dto.user.UserRegisterRequest;
 import com.seaman.seamanseapicturebackend.model.entity.User;
 import com.seaman.seamanseapicturebackend.model.vo.LoginUserVO;
+import com.seaman.seamanseapicturebackend.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author SeaManzhw
@@ -49,6 +55,22 @@ public interface UserService extends IService<User> {
     LoginUserVO getLoginUserVO(User user);
 
     /**
+     * 获得脱敏后的用户信息
+     *
+     * @param user 未脱敏用户
+     * @return 脱敏后的用户信息
+     */
+    UserVO getUserVO(User user);
+
+    /**
+     * 获得脱敏后的用户信息列表
+     *
+     * @param userList 未脱敏用户列表
+     * @return 脱敏后的用户信息列表
+     */
+    List<UserVO> getUserVOList(List<User> userList);
+
+    /**
      * 获取登录用户
      *
      * @param request 请求头
@@ -64,5 +86,28 @@ public interface UserService extends IService<User> {
      */
     boolean userLogout(HttpServletRequest request);
 
+    /**
+     * 获取查询条件
+     *
+     * @param userQueryRequest 查询用户DTO
+     * @return 查询条件
+     */
+    QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
 
+
+    /**
+     * 创建新用户
+     *
+     * @param userAddRequest 创建新用户请求
+     * @return 用户id
+     */
+    long addUser(UserAddRequest userAddRequest);
+
+    /**
+     * 分页查询用户（脱敏）
+     *
+     * @param userQueryRequest 查询DTO
+     * @return 查询结果
+     */
+    Page<UserVO> listUserVOByPage(UserQueryRequest userQueryRequest);
 }
