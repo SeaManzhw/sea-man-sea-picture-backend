@@ -16,12 +16,12 @@ spring:
 mybatis-plus:
   configuration:
     # 将数据库中下换线格式转为驼峰
-    map-underscore-to-camel-case: true
+    map-underscore-to-camel-case: false
     # 仅在开发阶段使用日志输出
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
-      logic-delete-field: idDelete # 逻辑删除字段
+      logic-delete-field: isDelete # 逻辑删除字段
       logic-delete-value: 1 # 已逻辑删除
       logic-not-delete-value: 0 # 未逻辑删除
 knife4j:
