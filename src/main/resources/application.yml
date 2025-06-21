@@ -5,7 +5,10 @@ server:
 spring:
   application:
     name: sea-man-sea-picture
-    # 数据库配置
+  # 激活本地配置文件
+  profiles:
+    active: local
+  # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/sea_man_sea_picture?serverTimezone=Asia/Shanghai
