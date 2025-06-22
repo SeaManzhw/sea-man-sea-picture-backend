@@ -29,7 +29,7 @@ import java.io.IOException;
 public class FileController {
 
     @Resource
-    CosManager cosManager;
+    private CosManager cosManager;
 
     /**
      * 测试文件上传
@@ -39,7 +39,7 @@ public class FileController {
      */
     @PostMapping("/test/upload")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<String> testUploadFile(@RequestPart MultipartFile multipartFile) {
+    public BaseResponse<String> testUploadFile(@RequestPart("file") MultipartFile multipartFile) {
         // 获取文件目录
         String originalFilename = multipartFile.getOriginalFilename();
         String filePath = String.format("/test/%s", originalFilename);
