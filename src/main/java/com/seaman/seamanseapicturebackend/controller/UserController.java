@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 public class UserController {
 
     @Resource
-    UserService userService;
+    private UserService userService;
 
     /**
      * 用户注册接口
