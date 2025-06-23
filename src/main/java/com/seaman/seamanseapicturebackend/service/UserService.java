@@ -110,4 +110,13 @@ public interface UserService extends IService<User> {
      * @return 查询结果
      */
     Page<UserVO> listUserVOByPage(UserQueryRequest userQueryRequest);
+
+    /**
+     * 是否为管理员
+     *
+     * @param user 需要判断的用户
+     * @return 是否为管理员
+     */
+    boolean isAdmin(User user);
+
 }
