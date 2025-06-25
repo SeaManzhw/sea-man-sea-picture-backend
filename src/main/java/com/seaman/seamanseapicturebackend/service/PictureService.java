@@ -8,7 +8,6 @@ import com.seaman.seamanseapicturebackend.model.dto.picture.*;
 import com.seaman.seamanseapicturebackend.model.entity.Picture;
 import com.seaman.seamanseapicturebackend.model.entity.User;
 import com.seaman.seamanseapicturebackend.model.vo.PictureVO;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,12 +22,12 @@ public interface PictureService extends IService<Picture> {
     /**
      * 上传图片
      *
-     * @param multipartFile        待上传图片
+     * @param inputSource          输入源
      * @param pictureUploadRequest 上传图片请求DTO
      * @param loginUser            上传用户
      * @return 图片视图
      */
-    PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, User loginUser);
+    PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser);
 
 
     /**

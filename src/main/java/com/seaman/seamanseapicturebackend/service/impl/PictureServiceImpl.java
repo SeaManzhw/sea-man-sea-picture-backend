@@ -12,7 +12,9 @@ import com.seaman.seamanseapicturebackend.common.DeleteRequest;
 import com.seaman.seamanseapicturebackend.exception.BusinessException;
 import com.seaman.seamanseapicturebackend.exception.ErrorCode;
 import com.seaman.seamanseapicturebackend.exception.ThrowUtils;
-import com.seaman.seamanseapicturebackend.manager.FileManager;
+import com.seaman.seamanseapicturebackend.manager.upload.FilePictureUpload;
+import com.seaman.seamanseapicturebackend.manager.upload.PictureUploadTemplate;
+import com.seaman.seamanseapicturebackend.manager.upload.UrlPictureUpload;
 import com.seaman.seamanseapicturebackend.mapper.PictureMapper;
 import com.seaman.seamanseapicturebackend.model.dto.file.UploadPictureResult;
 import com.seaman.seamanseapicturebackend.model.dto.picture.*;
@@ -24,7 +26,6 @@ import com.seaman.seamanseapicturebackend.model.vo.UserVO;
 import com.seaman.seamanseapicturebackend.service.PictureService;
 import com.seaman.seamanseapicturebackend.service.UserService;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -44,10 +45,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         implements PictureService {
 
     @Resource
-    FileManager fileManager;
+    UserService userService;
 
     @Resource
-    UserService userService;
+    FilePictureUpload filePictureUpload;
+
+    @Resource
+    UrlPictureUpload urlPictureUpload;
 
     /**
      * 根据上传结果构造图片信息
@@ -78,13 +82,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     /**
      * 上传图片
      *
-     * @param multipartFile        待上传图片
+     * @param inputSource          输入源
      * @param pictureUploadRequest 上传图片请求DTO
      * @param loginUser            上传用户
      * @return 图片视图
      */
     @Override
-    public PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, User loginUser) {
+    public PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser) {
         // 校验参数
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NO_AUTH_ERROR);
         // 判断新增或更新
@@ -105,7 +109,12 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         }
         // 上传图片，得到图片信息
         String uploadPathPrefix = String.format("public/%s", loginUser.getId());
-        UploadPictureResult uploadPictureResult = fileManager.uploadPicture(multipartFile, uploadPathPrefix);
+        // 调用模板类
+        PictureUploadTemplate pictureUploadTemplate = filePictureUpload;
+        if (inputSource instanceof String) {
+            pictureUploadTemplate = urlPictureUpload;
+        }
+        UploadPictureResult uploadPictureResult = pictureUploadTemplate.uploadPicture(inputSource, uploadPathPrefix);
         // 构造存入数据库的图片信息
         Picture picture = getPicture(loginUser.getId(), uploadPictureResult, pictureId);
         // 补充审核信息
