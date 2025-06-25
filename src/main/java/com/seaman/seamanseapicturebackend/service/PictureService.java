@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.seaman.seamanseapicturebackend.common.DeleteRequest;
-import com.seaman.seamanseapicturebackend.model.dto.picture.PictureEditRequest;
-import com.seaman.seamanseapicturebackend.model.dto.picture.PictureQueryRequest;
-import com.seaman.seamanseapicturebackend.model.dto.picture.PictureUpdateRequest;
-import com.seaman.seamanseapicturebackend.model.dto.picture.PictureUploadRequest;
+import com.seaman.seamanseapicturebackend.model.dto.picture.*;
 import com.seaman.seamanseapicturebackend.model.entity.Picture;
 import com.seaman.seamanseapicturebackend.model.entity.User;
 import com.seaman.seamanseapicturebackend.model.vo.PictureVO;
@@ -80,9 +77,10 @@ public interface PictureService extends IService<Picture> {
      * 更新图片（仅管理员）
      *
      * @param pictureUpdateRequest 图片更新请求
+     * @param loginUser            登录用户
      * @return 更新是否成功
      */
-    boolean updatePicture(PictureUpdateRequest pictureUpdateRequest);
+    boolean updatePicture(PictureUpdateRequest pictureUpdateRequest, User loginUser);
 
     /**
      * 编辑图片（用户使用）
@@ -92,4 +90,21 @@ public interface PictureService extends IService<Picture> {
      * @return 编辑是否成功
      */
     boolean editPicture(PictureEditRequest pictureEditRequest, HttpServletRequest request);
+
+    /**
+     * 图片审核
+     *
+     * @param pictureReviewRequest 图片审核请求
+     * @param loginUser            登录用户
+     */
+    void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
+
+    /**
+     * 填充神审核参数
+     *
+     * @param picture   待添加的图片
+     * @param loginUser 登录用户
+     */
+    void fillReviewParams(Picture picture, User loginUser);
+
 }
