@@ -106,4 +106,13 @@ public interface PictureService extends IService<Picture> {
      */
     void fillReviewParams(Picture picture, User loginUser);
 
+    /**
+     * 批量抓取图片
+     *
+     * @param pictureUploadByBatchRequest 抓取图片请求
+     * @param loginUser                   登录用户
+     * @return 成功抓取条数
+     */
+    Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
+
 }

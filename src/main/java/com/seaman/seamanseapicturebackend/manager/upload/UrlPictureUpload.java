@@ -23,7 +23,7 @@ import java.util.List;
 @Service
 public class UrlPictureUpload extends PictureUploadTemplate {
     @Override
-    protected void validPicture(Object inputSource) {
+    protected String validPicture(Object inputSource) {
         String fileUrl = (String) inputSource;
         // 1. 校验非空
         ThrowUtils.throwIf(StrUtil.isBlank(fileUrl), ErrorCode.PARAMS_ERROR, "文件地址不能为空");
@@ -40,7 +40,7 @@ public class UrlPictureUpload extends PictureUploadTemplate {
         try (HttpResponse response = HttpUtil.createRequest(Method.HEAD, fileUrl).execute()) {
             //若没有HEAD请求也放行，宽松校验
             if (response.getStatus() != HttpStatus.HTTP_OK) {
-                return;
+                return "";
             }
             // 4. 校验文件类型
             String contentType = response.header("Content-Type");
@@ -61,6 +61,29 @@ public class UrlPictureUpload extends PictureUploadTemplate {
                     throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件大小格式错误");
                 }
             }
+            // 返回文件后缀
+            return getSuffixFromContentType(contentType);
+        }
+    }
+
+    /**
+     * 根据图片类型返回对应的后缀名
+     *
+     * @param contentType 图片类型
+     * @return 返回后缀名
+     */
+    private String getSuffixFromContentType(String contentType) {
+        switch (contentType) {
+            case "image/jpeg":
+                return "jpeg";
+            case "image/jpg":
+                return "jpg";
+            case "image/png":
+                return "png";
+            case "image/webp":
+                return "webp";
+            default:
+                return "";
         }
     }
 

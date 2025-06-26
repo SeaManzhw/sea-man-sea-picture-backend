@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 public class FilePictureUpload extends PictureUploadTemplate {
     @Override
-    protected void validPicture(Object inputSource) {
+    protected String validPicture(Object inputSource) {
         MultipartFile multipartFile = (MultipartFile) inputSource;
         // 1.判空
         ThrowUtils.throwIf(multipartFile == null, ErrorCode.PARAMS_ERROR, "文件不能为空");
@@ -28,6 +28,7 @@ public class FilePictureUpload extends PictureUploadTemplate {
         String suffix = FileUtil.getSuffix(multipartFile.getOriginalFilename());
         final List<String> ALLOW_FORMAT_LIST = Arrays.asList("jpeg", "jpg", "png", "webp");
         ThrowUtils.throwIf(!ALLOW_FORMAT_LIST.contains(suffix), ErrorCode.PARAMS_ERROR, "非法文件类型");
+        return suffix;
     }
 
     @Override

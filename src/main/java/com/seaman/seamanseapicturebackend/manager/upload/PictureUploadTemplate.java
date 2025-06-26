@@ -39,11 +39,11 @@ public abstract class PictureUploadTemplate {
      */
     public UploadPictureResult uploadPicture(Object inputSource, String uploadPathPrefix) {
         // 1. 校验图片
-        validPicture(inputSource);
+        String suffix = validPicture(inputSource);
         // 2. 获取图片上传路径
         String uuid = RandomUtil.randomString(16);
         String originFilename = getOriginFilename(inputSource);
-        String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid, FileUtil.getSuffix(originFilename));
+        String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid, suffix);
         String uploadPath = String.format("%s/%s", uploadPathPrefix, uploadFilename);
         File file = null;
         try {
@@ -73,7 +73,7 @@ public abstract class PictureUploadTemplate {
      *
      * @param inputSource 输入源
      */
-    protected abstract void validPicture(Object inputSource);
+    protected abstract String validPicture(Object inputSource);
 
     /**
      * 获取原始文件名
