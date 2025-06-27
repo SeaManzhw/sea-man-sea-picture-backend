@@ -24,9 +24,11 @@ import java.util.List;
 
 /**
  * 文件管理类
+ * @Deprecated 已废弃，改为使用 upload 包中的代码
  */
 @Slf4j
 @Service
+@Deprecated
 public class FileManager {
 
     @Resource
