@@ -12,13 +12,19 @@ spring:
   servlet:
     multipart:
       max-file-size: 10MB
-  # 数据库配置
+  # MySQL数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/sea_man_sea_picture?serverTimezone=Asia/Shanghai
     username: root
     password: Zhaohaiwei.1
-
+  # Redis数据库配置
+  redis:
+    database: 0
+    host: localhost
+    port: 6379
+    lettuce:
+      shutdown-timeout: 5000
 # mybatis-plus配置
 mybatis-plus:
   configuration:

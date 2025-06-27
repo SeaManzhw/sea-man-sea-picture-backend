@@ -115,4 +115,12 @@ public interface PictureService extends IService<Picture> {
      */
     Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
 
+    /**
+     * 缓存方法查询图片
+     *
+     * @param pictureQueryRequest 图片查询请求
+     * @param request             请求头
+     * @return 查询结果
+     */
+    Page<PictureVO> listPictureVOByPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
 }

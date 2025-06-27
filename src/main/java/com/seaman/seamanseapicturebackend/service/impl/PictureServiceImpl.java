@@ -3,11 +3,14 @@ package com.seaman.seamanseapicturebackend.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.seaman.seamanseapicturebackend.common.DeleteRequest;
 import com.seaman.seamanseapicturebackend.exception.BusinessException;
 import com.seaman.seamanseapicturebackend.exception.ErrorCode;
@@ -30,15 +33,20 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +59,16 @@ import java.util.stream.Collectors;
 public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         implements PictureService {
 
+    /**
+     * 本地缓存
+     */
+    private final Cache<String, String> LOCAL_CACHE =
+            Caffeine.newBuilder().initialCapacity(1024)
+                    .maximumSize(10000L)
+                    // 缓存 5 分钟移除
+                    .expireAfterWrite(5L, TimeUnit.MINUTES)
+                    .build();
+
     @Resource
     UserService userService;
 
@@ -59,6 +77,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     UrlPictureUpload urlPictureUpload;
+
+    @Resource
+    StringRedisTemplate stringRedisTemplate;
 
     /**
      * 根据上传结果构造图片信息
@@ -462,6 +483,49 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             }
         }
         return uploadCount;
+    }
+
+
+    /**
+     * 缓存方法查询图片
+     *
+     * @param pictureQueryRequest 图片查询请求
+     * @param request             请求头
+     * @return 查询结果
+     */
+    @Override
+    public Page<PictureVO> listPictureVOByPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
+        int current = pictureQueryRequest.getCurrent();
+        int pageSize = pictureQueryRequest.getPageSize();
+        // 限制爬虫
+        ThrowUtils.throwIf(pageSize > 20, ErrorCode.PARAMS_ERROR);
+        // 构造缓存 key
+        String jsonStr = JSONUtil.toJsonStr(pictureQueryRequest);
+        String hashKey = DigestUtils.md5DigestAsHex(jsonStr.getBytes(StandardCharsets.UTF_8));
+        String cacheKey = "seamanseapicture:listPictureVOByPage" + hashKey;
+        // 查询本地缓存
+        String cacheValue = LOCAL_CACHE.getIfPresent(cacheKey);
+        if (cacheValue != null) {
+            return JSONUtil.toBean(cacheValue, Page.class);
+        }
+        // 查询redis
+        ValueOperations<String, String> opsForValue = stringRedisTemplate.opsForValue();
+        cacheValue = opsForValue.get(cacheKey);
+        if (cacheValue != null) {
+            LOCAL_CACHE.put(cacheKey, cacheValue);
+            return JSONUtil.toBean(cacheValue, Page.class);
+        }
+        // 操作数据库
+        Page<Picture> picturePage = this.page(new Page<>(current, pageSize), this.getQueryWrapper(pictureQueryRequest));
+        ThrowUtils.throwIf(picturePage == null, ErrorCode.NOT_FOUND_ERROR);
+        Page<PictureVO> pictureVOPage = this.getPictureVOPage(picturePage, request);
+        // 存入 Redis 数据库与本地缓存
+        cacheValue = JSONUtil.toJsonStr(pictureVOPage);
+        // 设置缓存过期时间，5 到 10 分钟随机，避免缓存雪崩
+        int cacheExpireTime = 300 + RandomUtil.randomInt(0, 300);
+        opsForValue.set(cacheKey, cacheValue, cacheExpireTime, TimeUnit.SECONDS);
+        LOCAL_CACHE.put(cacheKey, cacheValue);
+        return pictureVOPage;
     }
 
 }
