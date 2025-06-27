@@ -4,23 +4,20 @@ import lombok.Data;
 
 import java.io.Serializable;
 
-/**
- * 上传图片DTO
- */
 @Data
-public class PictureUploadRequest implements Serializable {
+public class PictureReviewRequest implements Serializable {
 
     private static final long serialVersionUID = 1L;
     /**
-     * 图片 id（用于修改）
+     * id
      */
     private Long id;
     /**
-     * 文件地址
+     * 状态：0-待审核, 1-通过, 2-拒绝
      */
-    private String fileUrl;
+    private Integer reviewStatus;
     /**
-     * 图片名称
+     * 审核信息
      */
-    private String picName;
+    private String reviewMessage;
 }

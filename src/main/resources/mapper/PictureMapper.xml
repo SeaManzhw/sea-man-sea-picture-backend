@@ -5,27 +5,32 @@
 <mapper namespace="com.seaman.seamanseapicturebackend.mapper.PictureMapper">
 
     <resultMap id="BaseResultMap" type="com.seaman.seamanseapicturebackend.model.entity.Picture">
-            <id property="id" column="id" />
-            <result property="url" column="url" />
-            <result property="name" column="name" />
-            <result property="introduction" column="introduction" />
-            <result property="category" column="category" />
-            <result property="tags" column="tags" />
-            <result property="picSize" column="picSize" />
-            <result property="picWidth" column="picWidth" />
-            <result property="picHeight" column="picHeight" />
-            <result property="picScale" column="picScale" />
-            <result property="picFormat" column="picFormat" />
-            <result property="userId" column="userId" />
-            <result property="createTime" column="createTime" />
-            <result property="editTime" column="editTime" />
-            <result property="updateTime" column="updateTime" />
-            <result property="isDelete" column="isDelete" />
+        <id property="id" column="id"/>
+        <result property="url" column="url"/>
+        <result property="name" column="name"/>
+        <result property="introduction" column="introduction"/>
+        <result property="category" column="category"/>
+        <result property="tags" column="tags"/>
+        <result property="picSize" column="picSize"/>
+        <result property="picWidth" column="picWidth"/>
+        <result property="picHeight" column="picHeight"/>
+        <result property="picScale" column="picScale"/>
+        <result property="picFormat" column="picFormat"/>
+        <result property="userId" column="userId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="editTime" column="editTime"/>
+        <result property="updateTime" column="updateTime"/>
+        <result property="isDelete" column="isDelete"/>
+        <result property="reviewStatus" column="reviewStatus"/>
+        <result property="reviewMessage" column="reviewMessage"/>
+        <result property="reviewerId" column="reviewerId"/>
+        <result property="reviewTime" column="reviewTime"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,url,name,introduction,category,tags,
         picSize,picWidth,picHeight,picScale,picFormat,
-        userId,createTime,editTime,updateTime,isDelete
+        userId,createTime,editTime,updateTime,isDelete,
+        reviewStatus,reviewMessage,reviewerId,reviewTime
     </sql>
 </mapper>
