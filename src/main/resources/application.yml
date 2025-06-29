@@ -2,6 +2,9 @@ server:
   port: 8080
   servlet:
     context-path: /api
+    session:
+      cookie:
+        max-age: 2592000
 spring:
   application:
     name: sea-man-sea-picture
@@ -25,6 +28,10 @@ spring:
     port: 6379
     lettuce:
       shutdown-timeout: 5000
+  # Session配置
+  session:
+    store-type: redis
+    timeout: 2592000
 # mybatis-plus配置
 mybatis-plus:
   configuration:
