@@ -12,7 +12,14 @@ public class UploadPictureResult {
      * 图片地址
      */
     private String url;
-
+    /**
+     * 缩略图 url
+     */
+    private String thumbnailUrl;
+    /**
+     * 需要删除的旧图URL
+     */
+    private String oldUrl;
     /**
      * 图片名称
      */
