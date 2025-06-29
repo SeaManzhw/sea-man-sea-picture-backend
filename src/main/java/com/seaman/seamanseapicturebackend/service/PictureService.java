@@ -115,4 +115,26 @@ public interface PictureService extends IService<Picture> {
      */
     Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
 
+    /**
+     * 缓存方法查询图片
+     *
+     * @param pictureQueryRequest 图片查询请求
+     * @param request             请求头
+     * @return 查询结果
+     */
+    Page<PictureVO> listPictureVOByPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
+
+    /**
+     * 根据url删除某张图片
+     *
+     * @param url 图片地址
+     */
+    void deleteOnePictureFromCOS(String url);
+
+    /**
+     * 根据图片信息删除图片原图、缩略图
+     *
+     * @param oldPicture 旧图片
+     */
+    void deleteAllPictureFromCOS(Picture oldPicture);
 }
