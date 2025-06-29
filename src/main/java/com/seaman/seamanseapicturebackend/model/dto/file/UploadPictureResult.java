@@ -17,6 +17,10 @@ public class UploadPictureResult {
      */
     private String thumbnailUrl;
     /**
+     * 需要删除的旧图URL
+     */
+    private String oldUrl;
+    /**
      * 图片名称
      */
     private String picName;

@@ -15,6 +15,7 @@ import com.seaman.seamanseapicturebackend.common.DeleteRequest;
 import com.seaman.seamanseapicturebackend.exception.BusinessException;
 import com.seaman.seamanseapicturebackend.exception.ErrorCode;
 import com.seaman.seamanseapicturebackend.exception.ThrowUtils;
+import com.seaman.seamanseapicturebackend.manager.CosManager;
 import com.seaman.seamanseapicturebackend.manager.upload.FilePictureUpload;
 import com.seaman.seamanseapicturebackend.manager.upload.PictureUploadTemplate;
 import com.seaman.seamanseapicturebackend.manager.upload.UrlPictureUpload;
@@ -35,6 +36,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -70,16 +72,19 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                     .build();
 
     @Resource
-    UserService userService;
+    private UserService userService;
 
     @Resource
-    FilePictureUpload filePictureUpload;
+    private FilePictureUpload filePictureUpload;
 
     @Resource
-    UrlPictureUpload urlPictureUpload;
+    private UrlPictureUpload urlPictureUpload;
 
     @Resource
-    StringRedisTemplate stringRedisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private CosManager cosManager;
 
     /**
      * 根据上传结果构造图片信息
@@ -139,7 +144,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             if (oldPicture != null) {
                 // 判断权限
                 ThrowUtils.throwIf(!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser), ErrorCode.NO_AUTH_ERROR);
-                // todo 若存在，需要删除COS原图片
+                // 删除旧图信息
+                deleteAllPictureFromCOS(oldPicture);
             } else {
                 throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "图片不存在");
             }
@@ -152,6 +158,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             pictureUploadTemplate = urlPictureUpload;
         }
         UploadPictureResult uploadPictureResult = pictureUploadTemplate.uploadPicture(inputSource, uploadPathPrefix);
+        // 删除旧图信息
+        deleteOnePictureFromCOS(uploadPictureResult.getOldUrl());
         // 构造存入数据库的图片信息
         Picture picture = getPicture(loginUser.getId(), uploadPictureResult, pictureId, pictureUploadRequest);
         // 补充审核信息
@@ -316,7 +324,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 2. 仅用户自己和管理员可以删除
         User loginUser = userService.getLoginUser(request);
         ThrowUtils.throwIf(!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser), ErrorCode.NO_AUTH_ERROR);
-        // 3. 操作数据库
+        // 3. 清理COS中的文件资源
+        deleteAllPictureFromCOS(oldPicture);
+        // 4. 操作数据库
         return this.removeById(pictureId);
     }
 
@@ -528,6 +538,28 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         opsForValue.set(cacheKey, cacheValue, cacheExpireTime, TimeUnit.SECONDS);
         LOCAL_CACHE.put(cacheKey, cacheValue);
         return pictureVOPage;
+    }
+
+    /**
+     * 根据url删除某张图片
+     *
+     * @param url 图片地址
+     */
+    @Override
+    public void deleteOnePictureFromCOS(String url) {
+        cosManager.deleteObject(url);
+    }
+
+    /**
+     * 根据图片信息删除图片原图、缩略图
+     *
+     * @param oldPicture 旧图片
+     */
+    @Async
+    @Override
+    public void deleteAllPictureFromCOS(Picture oldPicture) {
+        deleteOnePictureFromCOS(oldPicture.getUrl());
+        deleteOnePictureFromCOS(oldPicture.getThumbnailUrl());
     }
 
 }

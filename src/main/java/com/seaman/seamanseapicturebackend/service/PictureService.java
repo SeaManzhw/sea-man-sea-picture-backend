@@ -123,4 +123,18 @@ public interface PictureService extends IService<Picture> {
      * @return 查询结果
      */
     Page<PictureVO> listPictureVOByPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
+
+    /**
+     * 根据url删除某张图片
+     *
+     * @param url 图片地址
+     */
+    void deleteOnePictureFromCOS(String url);
+
+    /**
+     * 根据图片信息删除图片原图、缩略图
+     *
+     * @param oldPicture 旧图片
+     */
+    void deleteAllPictureFromCOS(Picture oldPicture);
 }

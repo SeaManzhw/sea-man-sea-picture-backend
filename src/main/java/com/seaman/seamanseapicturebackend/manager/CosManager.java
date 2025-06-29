@@ -87,4 +87,17 @@ public class CosManager {
         return cosClient.putObject(putObjectRequest);
     }
 
+    /**
+     * 删除对象
+     *
+     * @param key 对象URL
+     */
+    public void deleteObject(String key) {
+        //处理字符串，去除前缀网址
+        int index = key.indexOf("com/");
+        if (index >= 0) {
+            key = key.substring(index + 4); // 4是"com/"的长度
+        }
+        cosClient.deleteObject(cosClientConfig.getBucket(), key);
+    }
 }
