@@ -80,7 +80,8 @@ public class PictureController {
     @PostMapping("/delete")
     public BaseResponse<Boolean> deletePicture(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(deleteRequest == null || deleteRequest.getId() <= 0, ErrorCode.PARAMS_ERROR);
-        boolean result = pictureService.deletePicture(deleteRequest, request);
+        User loginUser = userService.getLoginUser(request);
+        boolean result = pictureService.deletePicture(deleteRequest, loginUser);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
@@ -128,12 +129,7 @@ public class PictureController {
     @GetMapping("/get/vo")
     public BaseResponse<PictureVO> getPictureVOById(long id, HttpServletRequest request) {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
-        Picture picture = pictureService.getById(id);
-        ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
-        // 只能查看过审的权限
-        PictureReviewStatusEnum statusEnum = PictureReviewStatusEnum.getEnumByValue(picture.getReviewStatus());
-        ThrowUtils.throwIf(!PictureReviewStatusEnum.PASS.equals(statusEnum), ErrorCode.NO_AUTH_ERROR, " 图片审核未通过");
-        return ResultUtils.success(pictureService.getPictureVO(picture, request));
+        return ResultUtils.success(pictureService.getPictureVOById(id, request));
     }
 
     /**
@@ -162,18 +158,19 @@ public class PictureController {
      */
     @PostMapping("/list/page/vo")
     public BaseResponse<Page<PictureVO>> listPictureVOByPage(@RequestBody PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
-        int current = pictureQueryRequest.getCurrent();
-        int pageSize = pictureQueryRequest.getPageSize();
-        // 限制爬虫
-        ThrowUtils.throwIf(pageSize > 20, ErrorCode.PARAMS_ERROR);
-        // 普通用户默认只能看到审核通过的图片
-        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
-        // 操作数据库
-        Page<Picture> picturePage = pictureService.page(new Page<>(current, pageSize), pictureService.getQueryWrapper(pictureQueryRequest));
-        ThrowUtils.throwIf(picturePage == null, ErrorCode.NOT_FOUND_ERROR);
-        return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
+        ThrowUtils.throwIf(pictureQueryRequest == null, ErrorCode.PARAMS_ERROR);
+        // 查询公共图库带有多级缓存，查询个人图库没有缓存
+        return ResultUtils.success(pictureService.listPictureVOByPage(pictureQueryRequest, request));
     }
 
+    /**
+     * 获取公共图库（带有缓存）
+     *
+     * @param pictureQueryRequest 图片查询请求
+     * @param request             请求头
+     * @return 分页图片（脱敏）
+     */
+    @Deprecated
     @PostMapping("/list/page/vo/cache")
     public BaseResponse<Page<PictureVO>> listPictureVOByPageWithCache(@RequestBody PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(pictureQueryRequest == null, ErrorCode.PARAMS_ERROR);
@@ -192,7 +189,8 @@ public class PictureController {
     @PostMapping("/edit")
     public BaseResponse<Boolean> editPicture(@RequestBody PictureEditRequest pictureEditRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(pictureEditRequest == null || pictureEditRequest.getId() <= 0, ErrorCode.PARAMS_ERROR);
-        boolean result = pictureService.editPicture(pictureEditRequest, request);
+        User loginUser = userService.getLoginUser(request);
+        boolean result = pictureService.editPicture(pictureEditRequest, loginUser);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }

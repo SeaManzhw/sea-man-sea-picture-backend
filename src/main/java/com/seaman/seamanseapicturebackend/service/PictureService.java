@@ -67,10 +67,10 @@ public interface PictureService extends IService<Picture> {
      * 根据id删除图片
      *
      * @param deleteRequest 删除请求
-     * @param request       请求头
+     * @param loginUser     登录用户
      * @return 删除是否成功
      */
-    boolean deletePicture(DeleteRequest deleteRequest, HttpServletRequest request);
+    boolean deletePicture(DeleteRequest deleteRequest, User loginUser);
 
     /**
      * 更新图片（仅管理员）
@@ -85,10 +85,10 @@ public interface PictureService extends IService<Picture> {
      * 编辑图片（用户使用）
      *
      * @param pictureEditRequest 编辑请求
-     * @param request            请求头
+     * @param loginUser          登录用户
      * @return 编辑是否成功
      */
-    boolean editPicture(PictureEditRequest pictureEditRequest, HttpServletRequest request);
+    boolean editPicture(PictureEditRequest pictureEditRequest, User loginUser);
 
     /**
      * 图片审核
@@ -116,15 +116,6 @@ public interface PictureService extends IService<Picture> {
     Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
 
     /**
-     * 缓存方法查询图片
-     *
-     * @param pictureQueryRequest 图片查询请求
-     * @param request             请求头
-     * @return 查询结果
-     */
-    Page<PictureVO> listPictureVOByPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
-
-    /**
      * 根据url删除某张图片
      *
      * @param url 图片地址
@@ -137,4 +128,49 @@ public interface PictureService extends IService<Picture> {
      * @param oldPicture 旧图片
      */
     void deleteAllPictureFromCOS(Picture oldPicture);
+
+    /**
+     * 校验空间图片权限
+     *
+     * @param loginUser 登录用户
+     * @param picture   图片
+     */
+    void checkPictureAuth(User loginUser, Picture picture);
+
+    /**
+     * 根据 id 获取图片（封装类）
+     *
+     * @param id      图片id
+     * @param request 请求头
+     * @return 脱敏后的图片
+     */
+    PictureVO getPictureVOById(long id, HttpServletRequest request);
+
+    /**
+     * 分页获取图片列表（封装类）
+     *
+     * @param pictureQueryRequest 图片查询请求
+     * @param request             请求头
+     * @return 分页图片（脱敏）
+     */
+    Page<PictureVO> listPictureVOByPage(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
+
+    /**
+     * 分页获取图片列表（封装类）
+     *
+     * @param pictureQueryRequest 图片查询请求
+     * @param request             请求头
+     * @return 分页图片（脱敏）
+     */
+    Page<PictureVO> listPictureVOByPageWithoutCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
+
+    /**
+     * 缓存方法查询图片
+     *
+     * @param pictureQueryRequest 图片查询请求
+     * @param request             请求头
+     * @return 查询结果
+     */
+    Page<PictureVO> listPictureVOByPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
+
 }
