@@ -3,6 +3,8 @@ package com.seaman.seamanseapicturebackend.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.seaman.seamanseapicturebackend.annotation.AuthCheck;
+import com.seaman.seamanseapicturebackend.api.imagesearch.baidu.ImageSearchApiFacade;
+import com.seaman.seamanseapicturebackend.api.imagesearch.baidu.model.ImageSearchResult;
 import com.seaman.seamanseapicturebackend.common.BaseResponse;
 import com.seaman.seamanseapicturebackend.common.DeleteRequest;
 import com.seaman.seamanseapicturebackend.common.ResultUtils;
@@ -242,4 +244,69 @@ public class PictureController {
         return ResultUtils.success(pictureService.uploadPictureByBatch(pictureUploadByBatchRequest, loginUser));
     }
 
+    /**
+     * 以图搜图
+     *
+     * @param searchPictureByPictureRequest 以图搜图请求
+     * @return 搜图结果
+     */
+    @PostMapping("/search/picture")
+    public BaseResponse<List<ImageSearchResult>> searchPictureByPictureBaiDu(@RequestBody SearchPictureByPictureRequest searchPictureByPictureRequest) {
+        ThrowUtils.throwIf(searchPictureByPictureRequest == null, ErrorCode.PARAMS_ERROR);
+        Long pictureId = searchPictureByPictureRequest.getPictureId();
+        ThrowUtils.throwIf(pictureId == null || pictureId <= 0, ErrorCode.PARAMS_ERROR);
+        Picture oldPicture = pictureService.getById(pictureId);
+        ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
+        List<ImageSearchResult> resultList = ImageSearchApiFacade.searchImage(oldPicture.getThumbnailUrl());
+        return ResultUtils.success(resultList);
+    }
+
+//    /**
+//     * 以图搜图
+//     * 需要修改前端部分
+//     *
+//     * @param searchPictureByPictureRequest 以图搜图请求
+//     * @return 搜图结果
+//     */
+//    @PostMapping("/search/picture")
+//    public BaseResponse<List<SoImageSearchResult>> searchPictureByPictureSO(@RequestBody SearchPictureByPictureRequest searchPictureByPictureRequest) {
+//        ThrowUtils.throwIf(searchPictureByPictureRequest == null, ErrorCode.PARAMS_ERROR);
+//        Long pictureId = searchPictureByPictureRequest.getPictureId();
+//        ThrowUtils.throwIf(pictureId == null || pictureId <= 0, ErrorCode.PARAMS_ERROR);
+//        Picture oldPicture = pictureService.getById(pictureId);
+//        ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
+//        List<SoImageSearchResult> resultList = SoImageSearchApiFacade.searchImage(oldPicture.getUrl());
+//        return ResultUtils.success(resultList);
+//    }
+
+    /**
+     * 根据颜色搜索图片
+     *
+     * @param searchPictureByColorRequest 根据颜色搜索图片请求
+     * @param request                     请求头
+     * @return 图片结果
+     */
+    @PostMapping("/search/color")
+    public BaseResponse<List<PictureVO>> searchPictureByColor(@RequestBody SearchPictureByColorRequest searchPictureByColorRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(searchPictureByColorRequest == null, ErrorCode.PARAMS_ERROR);
+        String picColor = searchPictureByColorRequest.getPicColor();
+        Long spaceId = searchPictureByColorRequest.getSpaceId();
+        User loginUser = userService.getLoginUser(request);
+        return ResultUtils.success(pictureService.searchPictureByColor(spaceId, picColor, loginUser));
+    }
+
+    /**
+     * 批量编辑图片
+     *
+     * @param pictureEditByBatchRequest 批量编辑图片请求
+     * @param request                   请求头
+     * @return 图片结果
+     */
+    @PostMapping("/edit/batch")
+    public BaseResponse<Boolean> editPictureByBatch(@RequestBody PictureEditByBatchRequest pictureEditByBatchRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(pictureEditByBatchRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        pictureService.editPictureByBatch(pictureEditByBatchRequest, loginUser);
+        return ResultUtils.success(true);
+    }
 }

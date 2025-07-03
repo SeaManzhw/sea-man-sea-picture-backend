@@ -27,12 +27,13 @@
         <result property="reviewMessage" column="reviewMessage"/>
         <result property="reviewerId" column="reviewerId"/>
         <result property="reviewTime" column="reviewTime"/>
+        <result property="picColor" column="picColor"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,url,thumbnailUrl,name,introduction,category,tags,
         picSize,picWidth,picHeight,picScale,picFormat,
         userId,spaceId,createTime,editTime,updateTime,isDelete,
-        reviewStatus,reviewMessage,reviewerId,reviewTime
+        reviewStatus,reviewMessage,reviewerId,reviewTime,picColor
     </sql>
 </mapper>
