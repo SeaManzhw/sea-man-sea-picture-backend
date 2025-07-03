@@ -10,6 +10,7 @@ import com.seaman.seamanseapicturebackend.model.entity.User;
 import com.seaman.seamanseapicturebackend.model.vo.PictureVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author SeaManzhw
@@ -172,5 +173,23 @@ public interface PictureService extends IService<Picture> {
      * @return 查询结果
      */
     Page<PictureVO> listPictureVOByPageWithCache(PictureQueryRequest pictureQueryRequest, HttpServletRequest request);
+
+    /**
+     * 格努颜色搜索图片
+     *
+     * @param spaceId   空间id
+     * @param picColor  图片颜色
+     * @param loginUser 登录用户
+     * @return 按相似度返回图片列表
+     */
+    List<PictureVO> searchPictureByColor(Long spaceId, String picColor, User loginUser);
+
+    /**
+     * 批量编辑图片
+     *
+     * @param pictureEditByBatchRequest 批量编辑图片请求
+     * @param loginUser                 登录用户
+     */
+    void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser);
 
 }
