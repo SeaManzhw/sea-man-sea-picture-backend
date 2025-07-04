@@ -1,8 +1,12 @@
 package com.seaman.seamanseapicturebackend.controller;
 
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.seaman.seamanseapicturebackend.annotation.AuthCheck;
+import com.seaman.seamanseapicturebackend.api.aliyunai.AliYunAiApi;
+import com.seaman.seamanseapicturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
+import com.seaman.seamanseapicturebackend.api.aliyunai.model.GetOutPaintingTaskResponse;
 import com.seaman.seamanseapicturebackend.api.imagesearch.baidu.ImageSearchApiFacade;
 import com.seaman.seamanseapicturebackend.api.imagesearch.baidu.model.ImageSearchResult;
 import com.seaman.seamanseapicturebackend.common.BaseResponse;
@@ -38,9 +42,12 @@ public class PictureController {
 
     @Resource
     private UserService userService;
+
     @Resource
     private PictureService pictureService;
 
+    @Resource
+    private AliYunAiApi aliYunAiApi;
 
     /**
      * 上传图片
@@ -309,4 +316,35 @@ public class PictureController {
         pictureService.editPictureByBatch(pictureEditByBatchRequest, loginUser);
         return ResultUtils.success(true);
     }
+
+    /**
+     * 创建 AI 扩图任务
+     *
+     * @param createPictureOutPaintingTaskRequest 创建扩图任务请求
+     * @param request                             请求头
+     * @return 创建扩图任务响应
+     */
+    @PostMapping("/out_painting/create_task")
+    public BaseResponse<CreateOutPaintingTaskResponse> createPictureOutPaintingTask(
+            @RequestBody CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest,
+            HttpServletRequest request) {
+        ThrowUtils.throwIf(createPictureOutPaintingTaskRequest == null || createPictureOutPaintingTaskRequest.getPictureId() == null,
+                ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        return ResultUtils.success(pictureService.createPictureOutPaintingTask(createPictureOutPaintingTaskRequest, loginUser));
+    }
+
+    /**
+     * 查询 AI 扩图任务
+     *
+     * @param taskId 任务id
+     * @return 获取扩图任务响应
+     */
+    @GetMapping("/out_painting/get_task")
+    public BaseResponse<GetOutPaintingTaskResponse> getPictureOutPaintingTask(String taskId) {
+        ThrowUtils.throwIf(StrUtil.isBlank(taskId), ErrorCode.PARAMS_ERROR);
+        GetOutPaintingTaskResponse task = aliYunAiApi.getOutPaintingTask(taskId);
+        return ResultUtils.success(task);
+    }
+
 }
