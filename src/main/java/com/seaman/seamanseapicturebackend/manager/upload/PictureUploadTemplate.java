@@ -6,6 +6,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.qcloud.cos.model.PutObjectResult;
 import com.qcloud.cos.model.ciModel.persistence.CIObject;
 import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
@@ -47,6 +48,9 @@ public abstract class PictureUploadTemplate {
         // 2. 获取图片上传路径
         String uuid = RandomUtil.randomString(16);
         String originFilename = getOriginFilename(inputSource);
+        if (StrUtil.isBlank(suffix)) {
+            suffix = FileUtil.getSuffix(originFilename);
+        }
         String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid, suffix);
         String key = String.format("%s/%s", uploadPathPrefix, uploadFilename);
         File file = null;

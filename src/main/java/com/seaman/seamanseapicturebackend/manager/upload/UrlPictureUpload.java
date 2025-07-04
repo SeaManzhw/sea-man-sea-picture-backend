@@ -91,6 +91,12 @@ public class UrlPictureUpload extends PictureUploadTemplate {
     protected String getOriginFilename(Object inputSource) {
         String fileUrl = (String) inputSource;
         // 从 URL 中提取文件名
+        // 针对ai扩图进行获取文件名称
+        if (fileUrl.contains("result-") && fileUrl.contains("OSSAccessKeyId")) {
+            int start = fileUrl.indexOf("result-");
+            int end = fileUrl.indexOf("?OSSAccessKeyId");
+            return fileUrl.substring(start, end);
+        }
         return FileUtil.getName(fileUrl);
     }
 
