@@ -107,4 +107,13 @@ public interface SpaceService extends IService<Space> {
      * @return 更新是否成功
      */
     boolean updateSpaceCapacity(Long spaceId, Long picSize, boolean isAdd);
+
+    /**
+     * 校验空间权限
+     *
+     * @param loginUser 登录用户
+     * @param space     空间
+     */
+    void checkSpaceAuth(User loginUser, Space space);
+
 }

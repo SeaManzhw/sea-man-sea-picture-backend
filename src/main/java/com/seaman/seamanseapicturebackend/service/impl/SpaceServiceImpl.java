@@ -197,7 +197,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         Space oldSpace = this.getById(spaceId);
         ThrowUtils.throwIf(oldSpace == null, ErrorCode.NOT_FOUND_ERROR);
         // 2. 仅用户自己和管理员可以删除
-        ThrowUtils.throwIf(!oldSpace.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser), ErrorCode.NO_AUTH_ERROR);
+        checkSpaceAuth(loginUser, oldSpace);
         // 4. 操作数据库
         return Boolean.TRUE.equals(transactionTemplate.execute(status -> {
             // 关联删除空间内所有图片
@@ -260,7 +260,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         Space oldSpace = this.getById(id);
         ThrowUtils.throwIf(oldSpace == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可以编辑
-        ThrowUtils.throwIf(!oldSpace.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser), ErrorCode.NO_AUTH_ERROR);
+        checkSpaceAuth(loginUser, oldSpace);
         // 操作数据库
         return this.updateById(space);
     }
@@ -326,6 +326,18 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
                 .setSql("totalSize = totalSize " + c + " " + picSize)
                 .setSql("totalCount = totalCount " + c + " 1")
                 .update();
+    }
+
+    /**
+     * 校验空间权限
+     *
+     * @param loginUser 登录用户
+     * @param space     空间
+     */
+    @Override
+    public void checkSpaceAuth(User loginUser, Space space) {
+        ThrowUtils.throwIf(!Objects.equals(loginUser.getId(), space.getUserId()) && !userService.isAdmin(loginUser),
+                ErrorCode.NO_AUTH_ERROR);
     }
 
 }
