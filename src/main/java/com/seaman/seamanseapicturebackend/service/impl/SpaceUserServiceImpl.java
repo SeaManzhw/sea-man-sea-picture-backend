@@ -156,14 +156,14 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
      * @return 返回空间成员
      */
     @Override
-    public SpaceUser getSpaceUser(SpaceUserQueryRequest spaceUserQueryRequest) {
+    public SpaceUserVO getSpaceUser(SpaceUserQueryRequest spaceUserQueryRequest,HttpServletRequest request) {
         Long spaceId = spaceUserQueryRequest.getSpaceId();
         Long userId = spaceUserQueryRequest.getUserId();
         ThrowUtils.throwIf(ObjectUtil.hasEmpty(spaceId, userId), ErrorCode.PARAMS_ERROR);
         // 查询数据库
         SpaceUser spaceUser = this.getOne(getQueryWrapper(spaceUserQueryRequest));
         ThrowUtils.throwIf(spaceUser == null, ErrorCode.NOT_FOUND_ERROR);
-        return spaceUser;
+        return getSpaceUserVO(spaceUser,request);
     }
 
     /**
@@ -264,6 +264,7 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         // 从对象中取值
         Long id = spaceUserQueryRequest.getId();
         Long spaceId = spaceUserQueryRequest.getSpaceId();
+        ThrowUtils.throwIf(spaceId == null || spaceId <= 0, ErrorCode.PARAMS_ERROR);
         Long userId = spaceUserQueryRequest.getUserId();
         String spaceRole = spaceUserQueryRequest.getSpaceRole();
         queryWrapper.eq(ObjUtil.isNotEmpty(id), "id", id);

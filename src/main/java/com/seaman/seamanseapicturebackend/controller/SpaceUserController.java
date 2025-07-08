@@ -47,7 +47,7 @@ public class SpaceUserController {
     @PostMapping("/add")
     @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<Long> addSpaceUser(@RequestBody SpaceUserAddRequest spaceUserAddRequest, HttpServletRequest request) {
-        ThrowUtils.throwIf(spaceUserAddRequest == null, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(spaceUserAddRequest == null || spaceUserAddRequest.getSpaceId() <= 0, ErrorCode.PARAMS_ERROR);
         return ResultUtils.success(spaceUserService.addSpaceUser(spaceUserAddRequest));
     }
 
@@ -73,10 +73,11 @@ public class SpaceUserController {
      */
     @PostMapping("/get")
     @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.SPACE_USER_MANAGE)
-    public BaseResponse<SpaceUser> getSpaceUser(@RequestBody SpaceUserQueryRequest spaceUserQueryRequest) {
+    public BaseResponse<SpaceUserVO> getSpaceUser(@RequestBody SpaceUserQueryRequest spaceUserQueryRequest,
+                                                HttpServletRequest request) {
         // 参数校验
         ThrowUtils.throwIf(spaceUserQueryRequest == null, ErrorCode.PARAMS_ERROR);
-        return ResultUtils.success(spaceUserService.getSpaceUser(spaceUserQueryRequest));
+        return ResultUtils.success(spaceUserService.getSpaceUser(spaceUserQueryRequest,request));
     }
 
     /**

@@ -32,6 +32,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
+import static com.seaman.seamanseapicturebackend.constant.PictureConstant.PUBLIC_SPACE_ID;
 import static com.seaman.seamanseapicturebackend.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
@@ -123,7 +124,7 @@ public class StpInterfaceImpl implements StpInterface {
             }
             spaceId = picture.getSpaceId();
             // 公共图库，仅本人或管理员可操作
-            if (spaceId == null) {
+            if (Objects.equals(spaceId, PUBLIC_SPACE_ID)) {
                 if (picture.getUserId().equals(userId) || userService.isAdmin(loginUser)) {
                     return ADMIN_PERMISSIONS;
                 } else {

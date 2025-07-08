@@ -164,6 +164,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         }
         // 从对象中取值
         Long id = spaceQueryRequest.getId();
+        ThrowUtils.throwIf(id == null || id <= 0, ErrorCode.PARAMS_ERROR);
         Long userId = spaceQueryRequest.getUserId();
         String spaceName = spaceQueryRequest.getSpaceName();
         Integer spaceLevel = spaceQueryRequest.getSpaceLevel();

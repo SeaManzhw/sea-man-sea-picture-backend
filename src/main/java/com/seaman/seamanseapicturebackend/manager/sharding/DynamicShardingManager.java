@@ -74,7 +74,7 @@ public class DynamicShardingManager {
                 .getMetaData()
                 .getDatabases()
                 .get(DATABASE_NAME)
-                .getRuleMetaData();// todo
+                .getRuleMetaData();
 
         Optional<ShardingRule> shardingRule = ruleMetaData.findSingleRule(ShardingRule.class);
         if (shardingRule.isPresent()) {

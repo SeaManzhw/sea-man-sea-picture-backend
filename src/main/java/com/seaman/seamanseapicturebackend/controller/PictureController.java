@@ -33,6 +33,9 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+
+import static com.seaman.seamanseapicturebackend.constant.PictureConstant.PUBLIC_SPACE_ID;
 
 /**
  * 图片控制类
@@ -304,7 +307,7 @@ public class PictureController {
     public BaseResponse<List<PictureVO>> searchPictureByColor(@RequestBody SearchPictureByColorRequest searchPictureByColorRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(searchPictureByColorRequest == null, ErrorCode.PARAMS_ERROR);
         String picColor = searchPictureByColorRequest.getPicColor();
-        Long spaceId = searchPictureByColorRequest.getSpaceId();
+        Long spaceId = Optional.ofNullable(searchPictureByColorRequest.getSpaceId()).orElse(PUBLIC_SPACE_ID);
         User loginUser = userService.getLoginUser(request);
         return ResultUtils.success(pictureService.searchPictureByColor(spaceId, picColor, loginUser));
     }

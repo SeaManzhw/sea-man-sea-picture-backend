@@ -11,6 +11,7 @@ import com.seaman.seamanseapicturebackend.config.CosClientConfig;
 import com.seaman.seamanseapicturebackend.exception.BusinessException;
 import com.seaman.seamanseapicturebackend.exception.ErrorCode;
 import com.seaman.seamanseapicturebackend.exception.ThrowUtils;
+import com.seaman.seamanseapicturebackend.manager.upload.CosManager;
 import com.seaman.seamanseapicturebackend.model.dto.file.UploadPictureResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

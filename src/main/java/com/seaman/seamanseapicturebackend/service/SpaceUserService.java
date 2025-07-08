@@ -73,9 +73,10 @@ public interface SpaceUserService extends IService<SpaceUser> {
      * 查询某个成员在某个空间中的信息
      *
      * @param spaceUserQueryRequest 查询请求
+     * @param request               请求头
      * @return 返回空间成员
      */
-    SpaceUser getSpaceUser(SpaceUserQueryRequest spaceUserQueryRequest);
+    SpaceUserVO getSpaceUser(SpaceUserQueryRequest spaceUserQueryRequest, HttpServletRequest request);
 
     /**
      * 查询空间中的成员

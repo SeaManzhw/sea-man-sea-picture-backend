@@ -14,7 +14,7 @@ public class PictureShardingAlgorithm implements StandardShardingAlgorithm<Long>
     public String doSharding(Collection<String> collection, PreciseShardingValue<Long> preciseShardingValue) {
         Long spaceId = preciseShardingValue.getValue();
         String logicTableName = preciseShardingValue.getLogicTableName();
-        if (spaceId == null) {
+        if (spaceId == 0) {
             //公共图库
             return logicTableName;
         }
