@@ -9,6 +9,7 @@ import com.seaman.seamanseapicturebackend.common.ResultUtils;
 import com.seaman.seamanseapicturebackend.constant.UserConstant;
 import com.seaman.seamanseapicturebackend.exception.ErrorCode;
 import com.seaman.seamanseapicturebackend.exception.ThrowUtils;
+import com.seaman.seamanseapicturebackend.manager.auth.SpaceUserAuthManager;
 import com.seaman.seamanseapicturebackend.model.dto.space.*;
 import com.seaman.seamanseapicturebackend.model.entity.Space;
 import com.seaman.seamanseapicturebackend.model.entity.User;
@@ -37,6 +38,8 @@ public class SpaceController {
     private UserService userService;
     @Resource
     private SpaceService spaceService;
+    @Resource
+    private SpaceUserAuthManager spaceUserAuthManager;
 
 
     /**
@@ -100,8 +103,11 @@ public class SpaceController {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
         Space space = spaceService.getById(id);
         ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR);
-        // 只能查看过审的权限
-        return ResultUtils.success(spaceService.getSpaceVO(space, request));
+        SpaceVO spaceVO = spaceService.getSpaceVO(space, request);
+        User loginUser = userService.getLoginUser(request);
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, loginUser);
+        spaceVO.setPermissionList(permissionList);
+        return ResultUtils.success(spaceVO);
     }
 
     /**

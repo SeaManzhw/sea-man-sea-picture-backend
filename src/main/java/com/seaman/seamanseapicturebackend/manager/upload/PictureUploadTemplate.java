@@ -14,7 +14,6 @@ import com.qcloud.cos.model.ciModel.persistence.ProcessResults;
 import com.seaman.seamanseapicturebackend.config.CosClientConfig;
 import com.seaman.seamanseapicturebackend.exception.BusinessException;
 import com.seaman.seamanseapicturebackend.exception.ErrorCode;
-import com.seaman.seamanseapicturebackend.manager.CosManager;
 import com.seaman.seamanseapicturebackend.model.dto.file.UploadPictureResult;
 import lombok.extern.slf4j.Slf4j;
 

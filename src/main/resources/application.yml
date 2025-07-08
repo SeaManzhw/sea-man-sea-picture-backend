@@ -5,6 +5,8 @@ server:
     session:
       cookie:
         max-age: 2592000
+
+
 spring:
   application:
     name: sea-man-sea-picture
@@ -32,6 +34,35 @@ spring:
   session:
     store-type: redis
     timeout: 2592000
+    # 空间图片分表
+  shardingsphere:
+    datasource:
+      names: sea_man_sea_picture
+      sea_man_sea_picture:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/sea_man_sea_picture
+        username: root
+        password: Zhaohaiwei.1
+    rules:
+      sharding:
+        tables:
+          picture:
+            actual-data-nodes: sea_man_sea_picture.picture  # 动态分表
+            table-strategy:
+              standard:
+                sharding-column: spaceId
+                sharding-algorithm-name: picture_sharding_algorithm  # 使用自定义分片算法
+        sharding-algorithms:
+          picture_sharding_algorithm:
+            type: CLASS_BASED
+            props:
+              strategy: standard
+              algorithmClassName: com.seaman.seamanseapicturebackend.manager.sharding.PictureShardingAlgorithm
+    props:
+      sql-show: true # 打印实际执行的sql
+
+
 # mybatis-plus配置
 mybatis-plus:
   configuration:
@@ -44,6 +75,9 @@ mybatis-plus:
       logic-delete-field: isDelete # 逻辑删除字段
       logic-delete-value: 1 # 已逻辑删除
       logic-not-delete-value: 0 # 未逻辑删除
+    enable-sql-runner: true # 实现能够执行sql
+
+
 knife4j:
   enable: true
   openapi:

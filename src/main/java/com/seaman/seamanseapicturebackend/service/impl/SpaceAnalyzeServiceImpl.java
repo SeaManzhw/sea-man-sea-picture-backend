@@ -25,7 +25,10 @@ import javax.annotation.Resource;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.seaman.seamanseapicturebackend.constant.PictureConstant.PUBLIC_SPACE_ID;
 
 /**
  * @author SeaMan
@@ -53,8 +56,9 @@ public class SpaceAnalyzeServiceImpl extends ServiceImpl<SpaceMapper, Space>
     @Override
     public SpaceUsageAnalyzeResponse getSpaceUsageAnalyze(SpaceUsageAnalyzeRequest spaceUsageAnalyzeRequest, User loginUser) {
         checkSpaceAnalyzeAuth(spaceUsageAnalyzeRequest, loginUser);
+        long spaceId = Optional.ofNullable(spaceUsageAnalyzeRequest.getSpaceId()).orElse(PUBLIC_SPACE_ID);
         // 分析公共空间
-        if (spaceUsageAnalyzeRequest.isQueryAll() || spaceUsageAnalyzeRequest.isQueryPublic()) {
+        if (spaceUsageAnalyzeRequest.isQueryAll() || spaceUsageAnalyzeRequest.isQueryPublic() || spaceId == PUBLIC_SPACE_ID) {
             // 构造查询条件
             QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
             queryWrapper.select("picSize");
@@ -65,8 +69,8 @@ public class SpaceAnalyzeServiceImpl extends ServiceImpl<SpaceMapper, Space>
             long usedCount = pictureObjList.size();
             // 构造返回结果
             SpaceUsageAnalyzeResponse spaceUsageAnalyzeResponse = new SpaceUsageAnalyzeResponse();
-            spaceUsageAnalyzeResponse.setMaxSize(usedSize);
-            spaceUsageAnalyzeResponse.setMaxCount(usedCount);
+            spaceUsageAnalyzeResponse.setUsedSize(usedSize);
+            spaceUsageAnalyzeResponse.setUsedCount(usedCount);
             // 公共图库不存在上限
             spaceUsageAnalyzeResponse.setMaxSize(null);
             spaceUsageAnalyzeResponse.setMaxCount(null);
@@ -75,7 +79,6 @@ public class SpaceAnalyzeServiceImpl extends ServiceImpl<SpaceMapper, Space>
             return spaceUsageAnalyzeResponse;
         }
         // 分析私人空间
-        Long spaceId = spaceUsageAnalyzeRequest.getSpaceId();
         Space space = spaceService.getById(spaceId);// 构造返回结果
         SpaceUsageAnalyzeResponse spaceUsageAnalyzeResponse = new SpaceUsageAnalyzeResponse();
         spaceUsageAnalyzeResponse.setMaxSize(space.getTotalSize());
@@ -259,13 +262,12 @@ public class SpaceAnalyzeServiceImpl extends ServiceImpl<SpaceMapper, Space>
     private void checkSpaceAnalyzeAuth(SpaceAnalyzeRequest spaceAnalyzeRequest, User loginUser) {
         boolean queryAll = spaceAnalyzeRequest.isQueryAll();
         boolean queryPublic = spaceAnalyzeRequest.isQueryPublic();
+        long spaceId = Optional.ofNullable(spaceAnalyzeRequest.getSpaceId()).orElse(PUBLIC_SPACE_ID);
         // 全图库分析或分析公共图库
-        if (queryAll || queryPublic) {
+        if (queryAll || queryPublic || spaceId == PUBLIC_SPACE_ID) {
             ThrowUtils.throwIf(!userService.isAdmin(loginUser), ErrorCode.NO_AUTH_ERROR);
         } else {
             // 分析私人空间，仅本人和管理员可以访问
-            Long spaceId = spaceAnalyzeRequest.getSpaceId();
-            ThrowUtils.throwIf(spaceId == null, ErrorCode.PARAMS_ERROR);
             Space space = spaceService.getById(spaceId);
             ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
             spaceService.checkSpaceAuth(loginUser, space);
@@ -284,20 +286,12 @@ public class SpaceAnalyzeServiceImpl extends ServiceImpl<SpaceMapper, Space>
             return;
         }
         boolean queryPublic = spaceAnalyzeRequest.isQueryPublic();
-        if (queryPublic) {
-            queryWrapper.isNull("spaceId");
+        long spaceId = Optional.ofNullable(spaceAnalyzeRequest.getSpaceId()).orElse(PUBLIC_SPACE_ID);
+        if (queryPublic || spaceId == PUBLIC_SPACE_ID) {
+            queryWrapper.eq("spaceId", PUBLIC_SPACE_ID);
             return;
         }
-        Long spaceId = spaceAnalyzeRequest.getSpaceId();
-        if (spaceId != null) {
-            queryWrapper.eq("spaceId", spaceId);
-            return;
-        }
-        throw new BusinessException(ErrorCode.PARAMS_ERROR, "未指定查询范围");
+        queryWrapper.eq("spaceId", spaceId);
     }
 
 }
-
-
-
-

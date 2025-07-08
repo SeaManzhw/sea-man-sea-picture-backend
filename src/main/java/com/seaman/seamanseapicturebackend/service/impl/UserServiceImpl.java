@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.seaman.seamanseapicturebackend.constant.UserConstant;
 import com.seaman.seamanseapicturebackend.exception.ErrorCode;
 import com.seaman.seamanseapicturebackend.exception.ThrowUtils;
+import com.seaman.seamanseapicturebackend.manager.auth.StpKit;
 import com.seaman.seamanseapicturebackend.mapper.UserMapper;
 import com.seaman.seamanseapicturebackend.model.dto.user.UserAddRequest;
 import com.seaman.seamanseapicturebackend.model.dto.user.UserLoginRequest;
@@ -109,6 +110,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         ThrowUtils.throwIf(user == null, ErrorCode.PARAMS_ERROR, "账号或密码错误");
         // 4. 保存用户登录态
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
+        // 5. 记录用户登录态到 Sa-token，便于空间鉴权时使用，注意保证该用户信息与 SpringSession 中的信息过期时间一致
+        StpKit.SPACE.login(user.getId());
+        StpKit.SPACE.getSession().set(UserConstant.USER_LOGIN_STATE, user);
         return this.getLoginUserVO(user);
     }
 
