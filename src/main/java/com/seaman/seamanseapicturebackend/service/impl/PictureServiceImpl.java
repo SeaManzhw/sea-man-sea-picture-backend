@@ -19,6 +19,9 @@ import com.seaman.seamanseapicturebackend.exception.BusinessException;
 import com.seaman.seamanseapicturebackend.exception.ErrorCode;
 import com.seaman.seamanseapicturebackend.exception.ThrowUtils;
 import com.seaman.seamanseapicturebackend.manager.CosManager;
+import com.seaman.seamanseapicturebackend.manager.auth.SpaceUserAuthManager;
+import com.seaman.seamanseapicturebackend.manager.auth.StpKit;
+import com.seaman.seamanseapicturebackend.manager.auth.model.SpaceUserPermissionConstant;
 import com.seaman.seamanseapicturebackend.manager.upload.FilePictureUpload;
 import com.seaman.seamanseapicturebackend.manager.upload.PictureUploadTemplate;
 import com.seaman.seamanseapicturebackend.manager.upload.UrlPictureUpload;
@@ -100,6 +103,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private AliYunAiApi aliYunAiApi;
+
+    @Resource
+    private SpaceUserAuthManager spaceUserAuthManager;
 
     /**
      * 根据上传结果构造图片信息
@@ -387,7 +393,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Picture oldPicture = this.getById(pictureId);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         // 2. 仅用户自己和管理员可以删除
-        checkPictureAuth(loginUser, oldPicture);
+        // 已使用Sa-Token注解鉴权
+        //checkPictureAuth(loginUser, oldPicture);
         // 3. 清理COS中的文件资源
         deleteAllPictureFromCOS(oldPicture);
         // 4. 操作数据库
@@ -438,7 +445,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Picture oldPicture = this.getById(picture);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         // 4. 只有用户自身或管理员才可编辑
-        checkPictureAuth(loginUser, oldPicture);
+        // 已使用Sa-Token注解鉴权
+        //checkPictureAuth(loginUser, oldPicture);
         // 5. 补充审核信息
         this.fillReviewParams(picture, loginUser);
         // 6. 操作数据库
@@ -625,11 +633,21 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         PictureReviewStatusEnum statusEnum = PictureReviewStatusEnum.getEnumByValue(picture.getReviewStatus());
         ThrowUtils.throwIf(!PictureReviewStatusEnum.PASS.equals(statusEnum), ErrorCode.NO_AUTH_ERROR, " 图片审核未通过");
         // 校验空间权限
+        // 使用Sa-Token注解鉴权要求一定登录，这里使用编程时校验
         Long spaceId = picture.getSpaceId();
-        if (spaceId == null) {
-            checkPictureAuth(userService.getLoginUser(request), picture);
+        Space space = null;
+        if (spaceId != null) {
+            boolean hasPermission = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
+            ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+//            checkPictureAuth(userService.getLoginUser(request), picture);
+            space = spaceService.getById(spaceId);
+            ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
         }
-        return getPictureVO(picture, request);
+        User loginUser = userService.getLoginUser(request);
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, loginUser);
+        PictureVO pictureVO = getPictureVO(picture, request);
+        pictureVO.setPermissionList(permissionList);
+        return pictureVO;
     }
 
     /**
@@ -652,10 +670,12 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             pictureQueryRequest.setNullSpaceId(true);
             return listPictureVOByPageWithCache(pictureQueryRequest, request);
         } else {
-            User loginUser = userService.getLoginUser(request);
-            Space space = spaceService.getById(spaceId);
-            ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
-            ThrowUtils.throwIf(!Objects.equals(loginUser.getId(), space.getUserId()), ErrorCode.NO_AUTH_ERROR, "没有空间权限");
+            boolean hasPermission = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
+            ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+//            User loginUser = userService.getLoginUser(request);
+//            Space space = spaceService.getById(spaceId);
+//            ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+//            ThrowUtils.throwIf(!Objects.equals(loginUser.getId(), space.getUserId()), ErrorCode.NO_AUTH_ERROR, "没有空间权限");
             return listPictureVOByPageWithoutCache(pictureQueryRequest, request);
         }
     }
@@ -812,7 +832,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Picture picture = this.getById(pictureId);
         ThrowUtils.throwIf(picture == null, ErrorCode.PARAMS_ERROR, "图片不存在");
         // 校验权限
-        checkPictureAuth(loginUser, picture);
+        // 已使用Sa-Token注解鉴权
+        //checkPictureAuth(loginUser, picture);
         // 构造请求参数
         CreateOutPaintingTaskRequest taskRequest = new CreateOutPaintingTaskRequest();
         CreateOutPaintingTaskRequest.Input input = new CreateOutPaintingTaskRequest.Input();
