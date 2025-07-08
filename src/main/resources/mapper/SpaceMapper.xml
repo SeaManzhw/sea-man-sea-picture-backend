@@ -8,6 +8,7 @@
         <id property="id" column="id"/>
         <result property="spaceName" column="spaceName"/>
         <result property="spaceLevel" column="spaceLevel"/>
+        <result property="spaceType" column="spaceType"/>
         <result property="maxSize" column="maxSize"/>
         <result property="maxCount" column="maxCount"/>
         <result property="totalSize" column="totalSize"/>
@@ -22,6 +23,6 @@
     <sql id="Base_Column_List">
         id,spaceName,spaceLevel,maxSize,maxCount,totalSize,
         totalCount,userId,createTime,editTime,updateTime,
-        isDelete
+        isDelete,spaceType
     </sql>
 </mapper>

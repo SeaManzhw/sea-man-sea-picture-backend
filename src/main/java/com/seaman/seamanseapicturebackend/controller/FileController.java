@@ -10,7 +10,7 @@ import com.seaman.seamanseapicturebackend.common.ResultUtils;
 import com.seaman.seamanseapicturebackend.constant.UserConstant;
 import com.seaman.seamanseapicturebackend.exception.BusinessException;
 import com.seaman.seamanseapicturebackend.exception.ErrorCode;
-import com.seaman.seamanseapicturebackend.manager.CosManager;
+import com.seaman.seamanseapicturebackend.manager.upload.CosManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

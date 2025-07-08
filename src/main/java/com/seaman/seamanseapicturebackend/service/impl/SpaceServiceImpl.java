@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.seaman.seamanseapicturebackend.common.DeleteRequest;
 import com.seaman.seamanseapicturebackend.exception.ErrorCode;
 import com.seaman.seamanseapicturebackend.exception.ThrowUtils;
+import com.seaman.seamanseapicturebackend.manager.sharding.DynamicShardingManager;
 import com.seaman.seamanseapicturebackend.mapper.SpaceMapper;
 import com.seaman.seamanseapicturebackend.model.dto.space.SpaceAddRequest;
 import com.seaman.seamanseapicturebackend.model.dto.space.SpaceEditRequest;
@@ -17,12 +18,16 @@ import com.seaman.seamanseapicturebackend.model.dto.space.SpaceQueryRequest;
 import com.seaman.seamanseapicturebackend.model.dto.space.SpaceUpdateRequest;
 import com.seaman.seamanseapicturebackend.model.entity.Picture;
 import com.seaman.seamanseapicturebackend.model.entity.Space;
+import com.seaman.seamanseapicturebackend.model.entity.SpaceUser;
 import com.seaman.seamanseapicturebackend.model.entity.User;
 import com.seaman.seamanseapicturebackend.model.enums.SpaceLevelEnum;
+import com.seaman.seamanseapicturebackend.model.enums.SpaceRoleEnum;
+import com.seaman.seamanseapicturebackend.model.enums.SpaceTypeEnum;
 import com.seaman.seamanseapicturebackend.model.vo.SpaceVO;
 import com.seaman.seamanseapicturebackend.model.vo.UserVO;
 import com.seaman.seamanseapicturebackend.service.PictureService;
 import com.seaman.seamanseapicturebackend.service.SpaceService;
+import com.seaman.seamanseapicturebackend.service.SpaceUserService;
 import com.seaman.seamanseapicturebackend.service.UserService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -55,6 +60,14 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     @Lazy
     private PictureService pictureService;
 
+    @Resource
+    @Lazy
+    private SpaceUserService spaceUserService;
+
+    @Resource
+    @Lazy
+    private DynamicShardingManager dynamicShardingManager;
+
     /**
      * 校验空间
      *
@@ -69,14 +82,18 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         String spaceName = space.getSpaceName();
         Integer spaceLevel = space.getSpaceLevel();
         SpaceLevelEnum spaceLevelEnum = SpaceLevelEnum.getEnumByValue(spaceLevel);
+        Integer spaceType = space.getSpaceType();
+        SpaceTypeEnum spaceTypeEnum = SpaceTypeEnum.getEnumByValue(spaceLevel);
         // 若为新创建空间
         if (add) {
             ThrowUtils.throwIf(StrUtil.isBlank(spaceName), ErrorCode.PARAMS_ERROR, "空间名称不能为空");
             ThrowUtils.throwIf(spaceLevel == null, ErrorCode.PARAMS_ERROR, "空间级别不能为空");
+            ThrowUtils.throwIf(spaceType == null, ErrorCode.PARAMS_ERROR, "空间类别不能为空");
         }
         //校验参数
         ThrowUtils.throwIf(spaceLevel != null && spaceLevelEnum == null, ErrorCode.PARAMS_ERROR, "空间级别不存在");
         ThrowUtils.throwIf(StrUtil.isNotBlank(spaceName) && spaceName.length() > 32, ErrorCode.PARAMS_ERROR, "空间名过长");
+        ThrowUtils.throwIf(spaceType != null && spaceTypeEnum == null, ErrorCode.PARAMS_ERROR, "空间类别不存在");
     }
 
     /**
@@ -147,16 +164,19 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         }
         // 从对象中取值
         Long id = spaceQueryRequest.getId();
+        ThrowUtils.throwIf(id == null || id <= 0, ErrorCode.PARAMS_ERROR);
         Long userId = spaceQueryRequest.getUserId();
         String spaceName = spaceQueryRequest.getSpaceName();
         Integer spaceLevel = spaceQueryRequest.getSpaceLevel();
         String sortField = spaceQueryRequest.getSortField();
         String sortOrder = spaceQueryRequest.getSortOrder();
+        Integer spaceType = spaceQueryRequest.getSpaceType();
         // 拼接查询条件
         queryWrapper.eq(ObjUtil.isNotEmpty(id), "id", id);
         queryWrapper.eq(ObjUtil.isNotEmpty(userId), "userId", userId);
         queryWrapper.like(StrUtil.isNotBlank(spaceName), "spaceName", spaceName);
         queryWrapper.eq(ObjUtil.isNotEmpty(spaceLevel), "spaceLevel", spaceLevel);
+        queryWrapper.eq(ObjUtil.isNotEmpty(spaceType), "spaceType", spaceType);
         // 排序
         queryWrapper.orderBy(StrUtil.isNotEmpty(sortField), sortOrder.equals("ascend"), sortField);
         return queryWrapper;
@@ -283,6 +303,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         if (spaceAddRequest.getSpaceLevel() == null) {
             space.setSpaceLevel(SpaceLevelEnum.COMMON.getValue());
         }
+        if (spaceAddRequest.getSpaceType() == null) {
+            space.setSpaceType(SpaceTypeEnum.PRIVATE.getValue());
+        }
         // 2. 填充数据
         fillSpaceBySpaceLevel(space);
         // 3. 数据校验
@@ -296,8 +319,22 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         Object lock = lockMap.computeIfAbsent(userId, k -> new Object());
         synchronized (lock) {
             try {
-                ThrowUtils.throwIf(this.lambdaQuery().eq(Space::getUserId, space.getUserId()).exists(),
-                        ErrorCode.OPERATION_ERROR, "每个用户仅能拥有一个私有空间");
+                boolean exists = this.lambdaQuery()
+                        .eq(Space::getUserId, space.getUserId())
+                        .eq(Space::getSpaceType, spaceAddRequest.getSpaceType())
+                        .exists();
+                ThrowUtils.throwIf(exists, ErrorCode.OPERATION_ERROR, "每个用户每类空间只能创建一个");
+                if (SpaceTypeEnum.TEAM.getValue() == space.getSpaceType()) {
+                    SpaceUser spaceUser = new SpaceUser();
+                    spaceUser.setSpaceId(space.getId());
+                    spaceUser.setUserId(loginUser.getId());
+                    spaceUser.setSpaceRole(SpaceRoleEnum.ADMIN.getValue());
+                    ThrowUtils.throwIf(!spaceUserService.save(spaceUser), ErrorCode.OPERATION_ERROR, "创建团队成员记录失败");
+                    // 旗舰版团队创建分表
+                    if (SpaceLevelEnum.FLAGSHIP.getValue() == space.getSpaceLevel()) {
+                        dynamicShardingManager.createSpacePictureTable(space);
+                    }
+                }
                 // 写入数据库
                 ThrowUtils.throwIf(!this.save(space), ErrorCode.OPERATION_ERROR);
             } finally {

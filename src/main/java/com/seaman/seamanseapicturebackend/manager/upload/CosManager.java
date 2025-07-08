@@ -1,4 +1,4 @@
-package com.seaman.seamanseapicturebackend.manager;
+package com.seaman.seamanseapicturebackend.manager.upload;
 
 
 import cn.hutool.core.io.FileUtil;
