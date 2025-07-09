@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.seaman.seamanseapicturebackend.manager.websocket.disruptor.PictureEditEventProducer;
 import com.seaman.seamanseapicturebackend.manager.websocket.model.PictureEditActionEnum;
 import com.seaman.seamanseapicturebackend.manager.websocket.model.PictureEditMessageTypeEnum;
 import com.seaman.seamanseapicturebackend.manager.websocket.model.PictureEditRequestMessage;
@@ -13,6 +14,7 @@ import com.seaman.seamanseapicturebackend.manager.websocket.model.PictureEditRes
 import com.seaman.seamanseapicturebackend.model.entity.User;
 import com.seaman.seamanseapicturebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -37,6 +39,10 @@ public class PictureEditHandler extends TextWebSocketHandler {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    @Lazy
+    private PictureEditEventProducer pictureEditEventProducer;
 
     /**
      * 连接建立成功后操作
@@ -75,23 +81,8 @@ public class PictureEditHandler extends TextWebSocketHandler {
         // 从session中获取参数
         User user = (User) session.getAttributes().get("user");
         Long pictureId = (Long) session.getAttributes().get("pictureId");
-        // 根据不同消息进行处理
-        String type = pictureEditRequestMessage.getType();
-        PictureEditMessageTypeEnum pictureEditMessageTypeEnum = PictureEditMessageTypeEnum.getEnumByValue(type);
-        switch (pictureEditMessageTypeEnum) {
-            case ENTER_EDIT:
-                handleEnterEditMessage(pictureEditRequestMessage, session, user, pictureId);
-                break;
-            case EDIT_ACTION:
-                handleEditActionMessage(pictureEditRequestMessage, session, user, pictureId);
-                break;
-            case EXIT_EDIT:
-                handleExitEditMessage(pictureEditRequestMessage, session, user, pictureId);
-                break;
-            default:
-                handleErrorMessage(pictureEditRequestMessage, session, user, pictureId);
-                break;
-        }
+        // 生产消息到 Disruptor 队列中
+        pictureEditEventProducer.publishEvent(pictureEditRequestMessage, session, user, pictureId);
     }
 
     /**
@@ -189,8 +180,8 @@ public class PictureEditHandler extends TextWebSocketHandler {
      * @param user                      用户
      * @param pictureId                 图片id
      */
-    private void handleErrorMessage(PictureEditRequestMessage pictureEditRequestMessage, WebSocketSession session,
-                                    User user, Long pictureId) throws IOException {
+    public void handleErrorMessage(PictureEditRequestMessage pictureEditRequestMessage, WebSocketSession session,
+                                   User user, Long pictureId) throws IOException {
         PictureEditResponseMessage pictureEditResponseMessage = new PictureEditResponseMessage();
         pictureEditResponseMessage.setMessage("消息类型错误");
         pictureEditResponseMessage.setUser(userService.getUserVO(user));
